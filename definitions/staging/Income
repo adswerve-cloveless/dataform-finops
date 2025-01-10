@@ -2,3 +2,5 @@ config {
   type: "table",
   schema: "dataform_staging"
 }
+
+SELECT 1 as income
