@@ -1,0 +1,4 @@
+config {
+  type: "table",
+  schema: "dataform_staging"
+}
