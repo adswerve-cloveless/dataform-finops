@@ -1,5 +1,5 @@
 defaultProject: adswerve-finance
 defaultLocation: US
-defaultDataset: dataform
+defaultDataset: dataform_finops
 defaultAssertionDataset: dataform_assertions
 dataformCoreVersion: 3.0.0
