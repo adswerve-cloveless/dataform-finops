@@ -2,7 +2,5 @@ config {
   type: "declaration",
   database: "adswerve-finance",
   schema: "raw_data",
-  name: "IncomeStatement2019"
+  name: "income_statement_2019"
 }
-
-SELECT 1 
