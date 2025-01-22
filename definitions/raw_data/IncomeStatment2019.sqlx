@@ -4,3 +4,5 @@ config {
   schema: "raw_data",
   name: "IncomeStatement2019"
 }
+
+SELECT 1 
