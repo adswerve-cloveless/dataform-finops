@@ -16,5 +16,5 @@ SELECT
   REGEXP_EXTRACT(Account, r'\b\d{4,5}\b') AS account_number,
   PARSE_DATE('%b %Y', Period) as date
 FROM
-  `adswerve-finance.raw_data.income_statement_*`
+  `adswerve-finance.raw_data.income_statement_2*`
 WHERE Period IS NOT NULL
