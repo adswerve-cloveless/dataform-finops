@@ -1,6 +1,12 @@
 --Query is used to combine all NetSuite data into a single table and extract relevant data.
-CREATE OR REPLACE TABLE `adswerve-finance.raw_data.income_statement_all`
-AS
+config {
+  type: "table",
+  bigquery: {
+    partitionBy: "month_posting",
+    clusterBy: ["parent_customer_id", "product_category", "managed", "class"]
+  }
+}
+
 SELECT
   Account AS account,
   Class AS class,
