@@ -1,0 +1,15 @@
+--Query is used to combine all NetSuite data into a single table and extract relevant data.
+CREATE OR REPLACE TABLE `adswerve-finance.raw_data.income_statement_all`
+AS
+SELECT
+  Account AS account,
+  Class AS class,
+  Department AS department,
+  Internal_ID AS internal_id,
+  Period AS period,
+  CAST(Sum_of_Amount AS NUMERIC) AS amount,
+  REGEXP_EXTRACT(Account, r'\b\d{4,5}\b') AS account_number,
+  PARSE_DATE('%b %Y', Period) as date
+FROM
+  `adswerve-finance.raw_data.income_statement_*`
+WHERE Period IS NOT NULL
