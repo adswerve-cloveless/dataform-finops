@@ -1,10 +1,9 @@
 --Query is used to combine all NetSuite data into a single table and extract relevant data.
 config {
   type: "table",
-  bigquery: {
-    partitionBy: "month_posting",
-    clusterBy: ["parent_customer_id", "product_category", "managed", "class"]
-  }
+  database: "adswerve-finance",
+  schema: "raw_data",
+  name: "income_statement_all"
 }
 
 SELECT
