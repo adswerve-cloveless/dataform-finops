@@ -11,6 +11,7 @@ WITH step_1 AS (
 SELECT 
   d.*,
   p.internal_id as project_id,
+  p.harvest_id,
   IFNULL(c.internal_id, p.customer_internal_id) as customer_id
 FROM ${ref("income_statement_all")} d
 LEFT JOIN `adswerve-finance.Warehouse.Project` p ON d.Internal_ID = p.internal_id
@@ -26,7 +27,7 @@ FROM step_1
 LEFT JOIN `adswerve-finance.Warehouse.Customer` c
 ON step_1.customer_id = c.internal_id),
 
--- step 3 brings in the appropriate salesforce_id for reporting. Salesforce and NetSuite have different customer architectures the correct way to join the two is to role up NetSuite to the parent and join on the Salesforce Id that is logged in NetSuite.  
+-- step 3 brings in the appropriate customer Salesforce_id for reporting. Salesforce and NetSuite have different customer architectures the correct way to join the two is to role up NetSuite to the parent and join on the Salesforce Id that is logged in NetSuite.  
 step_3 AS (
 SELECT
  step_2.*,
