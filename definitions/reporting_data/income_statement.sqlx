@@ -1,0 +1,40 @@
+-- The purpose of this data table is to provide a single way to traverse from NetSuite revenue data back to Salesforce customers and SOWs and Harvest customers and projects.
+config {
+  type: "table",
+  database: "adswerve-finance",
+  schema: "reporting_data",
+  name: "income_statement"
+}
+
+-- step 1 brings in the appropriate NetSuite project ID and NetSuite customer ID into the revenue data. This is needed as NetSuite by default commingles the two objects which creates multiple steps to follow each relationship individually.
+WITH step_1 AS (
+SELECT 
+  d.*,
+  p.internal_id as project_id,
+  IFNULL(c.internal_id, p.customer_internal_id) as customer_id
+FROM ${ref("income_statement_all")} d
+LEFT JOIN `adswerve-finance.Warehouse.Project` p ON d.Internal_ID = p.internal_id
+LEFT JOIN `adswerve-finance.Warehouse.Customer` c ON d.Internal_ID = c.internal_id
+),
+
+-- step 2 brings in the appropriate NetSuite parent customer ID. NetSuite has many children customers used for billing that are irrelevant to the rest of the business so reporting should generally be handled at the parent.
+step_2 AS (
+SELECT 
+  step_1.*,
+  c.parent_id
+FROM step_1
+LEFT JOIN `adswerve-finance.Warehouse.Customer` c
+ON step_1.customer_id = c.internal_id),
+
+-- step 3 brings in the appropriate salesforce_id for reporting. Salesforce and NetSuite have different customer architectures the correct way to join the two is to role up NetSuite to the parent and join on the Salesforce Id that is logged in NetSuite.  
+step_3 AS (
+SELECT
+ step_2.*,
+ c.salesforce_id
+FROM step_2
+LEFT JOIN `adswerve-finance.Warehouse.Customer` c
+ON step_2.parent_id = c.internal_id
+WHERE step_2.parent_id != step_2.customer_id
+)
+
+SELECT * FROM step_3
