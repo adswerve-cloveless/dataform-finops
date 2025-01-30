@@ -11,6 +11,7 @@ WITH step_1 AS (
 SELECT 
   d.*,
   p.internal_id as project_id,
+  p.harvest_id,
   IFNULL(c.internal_id, p.customer_internal_id) as customer_id
 FROM ${ref("income_statement_all")} d
 LEFT JOIN `adswerve-finance.Warehouse.Project` p ON d.Internal_ID = p.internal_id
