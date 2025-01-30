@@ -35,7 +35,6 @@ SELECT
 FROM step_2
 LEFT JOIN `adswerve-finance.Warehouse.Customer` c
 ON step_2.parent_id = c.internal_id
-WHERE step_2.parent_id != step_2.customer_id
 )
 
 SELECT * FROM step_3
