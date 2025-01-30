@@ -26,7 +26,7 @@ FROM step_1
 LEFT JOIN `adswerve-finance.Warehouse.Customer` c
 ON step_1.customer_id = c.internal_id),
 
--- step 3 brings in the appropriate salesforce_id for reporting. Salesforce and NetSuite have different customer architectures the correct way to join the two is to role up NetSuite to the parent and join on the Salesforce Id that is logged in NetSuite.  
+-- step 3 brings in the appropriate customer Salesforce_id for reporting. Salesforce and NetSuite have different customer architectures the correct way to join the two is to role up NetSuite to the parent and join on the Salesforce Id that is logged in NetSuite.  
 step_3 AS (
 SELECT
  step_2.*,
