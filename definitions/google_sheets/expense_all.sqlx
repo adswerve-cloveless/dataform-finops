@@ -1,0 +1,21 @@
+config {
+  type: "table",
+  database: "adswerve-finance",
+  schema: "reporting_data",
+  name: "expense"
+}
+
+SELECT
+  *
+FROM
+  ${ref("expense_2023")}
+UNION ALL
+SELECT
+  *
+FROM
+  ${ref("expense_2024")}
+UNION ALL
+SELECT
+  *
+FROM
+  ${ref("expense_2025")}
