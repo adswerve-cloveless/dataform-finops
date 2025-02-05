@@ -1,5 +1,5 @@
 config {
-  type: "table",
+  type: "declaration",
   database: "adswerve-finance",
   schema: "google_sheets",
   name: "expense_2025"
