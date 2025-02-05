@@ -1,6 +1,0 @@
-config {
-  type: "declaration",
-  database: "adswerve-finance",
-  schema: "Warehouse",
-  name: "project"
-}
