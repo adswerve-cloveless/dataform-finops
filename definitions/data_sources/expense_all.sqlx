@@ -2,7 +2,8 @@ config {
   type: "table",
   database: "adswerve-finance",
   schema: "reporting_data",
-  name: "expense"
+  name: "expense",
+  disabled: true
 }
 
 SELECT
