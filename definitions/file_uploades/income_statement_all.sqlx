@@ -4,7 +4,15 @@ config {
   database: "adswerve-finance",
   schema: "raw_data",
   name: "income_statement_all",
-  dependencies: "income_statement_2025"
+  dependencies: [
+    "income_statement_2025", 
+    "income_statement_2024", 
+    "income_statement_2023", 
+    "income_statement_2022",
+    "income_statement_2021",
+    "income_statement_2020",
+    "income_statement_2019"
+  ]
 }
 
 SELECT
