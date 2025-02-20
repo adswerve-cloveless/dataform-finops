@@ -24,7 +24,8 @@ LEFT JOIN `adswerve-finance.Warehouse.Customer` c ON d.Internal_ID = c.internal_
 step_2 AS (
 SELECT 
   step_1.*,
-  c.parent_id
+  c.parent_id,
+  c.account_category
 FROM step_1
 LEFT JOIN `adswerve-finance.Warehouse.Customer` c
 ON step_1.customer_id = c.internal_id
