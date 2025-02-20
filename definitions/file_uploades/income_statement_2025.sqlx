@@ -3,7 +3,7 @@
 config {
   type: "table",
   database: "adswerve-finance",
-  schema: "raw_date",
+  schema: "raw_data",
   name: "income_statement_2025",
 }
 
