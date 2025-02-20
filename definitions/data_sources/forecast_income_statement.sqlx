@@ -1,0 +1,44 @@
+-- pulls all forecast and budget data with relevant reporting data into a single table.
+config {
+  type: "table",
+  database: "adswerve-finance",
+  schema: "reporting_data",
+  name: "forecast_income_statement"
+}
+
+--step 1 gathers all data and brings in the table suffix used for naming the forecast
+WITH step_1 AS (
+  SELECT
+    *,
+    routines.scenario(_TABLE_SUFFIX) as scenario
+  FROM
+    `adswerve-finance.Fin_Stage.BigQuery_BudgetTemplate*`
+    ),
+  
+-- step 2 unpivots the forecasted data reports
+step_2 AS (
+SELECT * FROM step_1
+UNPIVOT(Amount FOR Period IN (   
+     Jan
+    ,Feb
+    ,Mar
+    ,Apr 
+    ,May
+    ,Jun 
+    ,Jul 
+    ,Aug 
+    ,Sep 
+    ,Oct 
+    ,Nov 
+    ,Dec))
+  ),
+
+-- step 3 generates a cleaned date column
+step_3 AS (
+  SELECT
+    step_2.* EXCEPT(Period),
+    DATE(SAFE_CAST(LEFT(step_2.scenario, 4) AS INT), EXTRACT(MONTH FROM PARSE_DATE('%b', period)),1) as date
+  FROM step_2
+)
+
+SELECT * FROM step_3

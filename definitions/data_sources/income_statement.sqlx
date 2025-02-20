@@ -21,12 +21,12 @@ LEFT JOIN `adswerve-finance.Warehouse.Customer` c ON d.Internal_ID = c.internal_
 ),
 
 
--- step 2 brings in the appropriate NetSuite parent customer ID. NetSuite has children customers used for billing that are irrelevant to the rest of the business so reporting should generally be handled at the parent.
+-- step 2 brings in the appropriate NetSuite parent customer ID. NetSuite has children customers used for billing that are irrelevant to the rest of the business so reporting should generally be handled at the parent. This step also include clean up of the account_category field.
 step_2 AS (
 SELECT 
   step_1.*,
   c.parent_id,
-  c.account_category
+  IF(c.account_category = 'Direct Marketer', 'Marketer', c.account_category) as account_category
 FROM step_1
 LEFT JOIN `adswerve-finance.Warehouse.Customer` c
 ON step_1.customer_id = c.internal_id
@@ -69,6 +69,8 @@ SELECT
   END AS internal_net_revenue_detail,
   -- revenue_segment is the highest level of a rollup for Media vs. Analytics. This dimension should allow from a summary of Media vs. Analytics revenue.
   CASE 
+    WHEN step_3.account_number = '41198' THEN "NA"
+    WHEN step_3.account_number = '51198' THEN "NA"
     WHEN a.internal_net_revenue_detail = 'Services' AND class LIKE "%Media%" THEN "Media"
     WHEN a.internal_net_revenue_detail = 'Services' AND class NOT LIKE "%Media%" THEN "Analytics"
     ELSE a.revenue_segement
