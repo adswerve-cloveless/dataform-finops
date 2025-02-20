@@ -76,6 +76,16 @@ SELECT
 FROM step_3
 LEFT JOIN `adswerve-finance.Warehouse.Account` a
 ON step_3.account_number = a.number
+),
+
+--step 5 alters the amount field to match signs based on the account type. Income accounts should reflect postive values while expense accounts should reflect negative values. This simplifies aggregations for Net Revenue and calculations using Other Income.
+step_5 AS (
+  SELECT 
+    step_4.* EXCEPT (amount),
+    CASE WHEN step_4.account_type NOT LIKE "%Income%" AND step_4.account_type != "Statistical" THEN step_4.amount * -1
+    ELSE step_4.amount
+  END as amount
+  FROM step_4
 )
 
-SELECT * FROM step_4
+SELECT * FROM step_5
