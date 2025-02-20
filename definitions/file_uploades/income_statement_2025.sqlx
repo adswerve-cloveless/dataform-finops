@@ -1,0 +1,10 @@
+-- this needs to be removed once income statement stateging files are in the right place.
+
+config {
+  type: "table",
+  database: "adswerve-finance",
+  schema: "raw_date",
+  name: "income_statement_2025",
+}
+
+SELECT * FROM `adswerve-finance.Fin_Stage.NS_IS_Actual_2025`

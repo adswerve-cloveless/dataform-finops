@@ -3,7 +3,8 @@ config {
   type: "table",
   database: "adswerve-finance",
   schema: "raw_data",
-  name: "income_statement_all"
+  name: "income_statement_all",
+  dependencies: "income_statement_2025"
 }
 
 SELECT
