@@ -1,0 +1,17 @@
+config {
+  type: "table",
+  database: "adswerve-finance",
+  schema: "routines",
+  name: "reporting_rollover_date",
+}
+
+SELECT IF(
+    (
+        SELECT MIN(DATE)
+        FROM `adswerve-finance.FinancialReporting.Calendar`
+        WHERE DATE >= CURRENT_DATE()
+            AND Is_ReportRoll_Dt = 1
+    ) <= CURRENT_DATE(), -- may be without equal to
+    DATE_SUB(DATE_TRUNC(CURRENT_DATE(), MONTH), INTERVAL 2 MONTH),
+    DATE_SUB(DATE_TRUNC(CURRENT_DATE(), MONTH), INTERVAL 1 MONTH)
+) as rollover_date

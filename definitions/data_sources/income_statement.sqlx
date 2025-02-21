@@ -52,7 +52,8 @@ ON act_step_2.account_number = a.number
 fcst_step_1 AS (
   SELECT
     *,
-    routines.scenario(_TABLE_SUFFIX) as scenario
+    routines.scenario(_TABLE_SUFFIX) as scenario,
+    PARSE_DATE('%Y%m%d', SUBSTR(_TABLE_SUFFIX, 2)) as scenario_date
   FROM
     `adswerve-finance.Fin_Stage.BigQuery_BudgetTemplate*`
     ),
@@ -79,6 +80,7 @@ UNPIVOT(Amount FOR Period IN (
 fcst_step_3 AS (
   SELECT
     fcst_step_2.scenario,
+    fcst_step_2.scenario_date,
     a.display_name AS account,
     IFNULL(cl.NAME, "- None -") AS class,
     IFNULL(d.name, "- None -") AS department,
@@ -108,6 +110,7 @@ fcst_step_3 AS (
 step_4 AS (
   SELECT 
     "Actual" as scenario,
+    CAST(NULL AS DATE) as scenario_date,
     * 
   FROM act_step_3
   UNION ALL

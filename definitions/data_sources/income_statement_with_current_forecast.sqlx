@@ -1,0 +1,23 @@
+config {
+  type: "table",
+  database: "adswerve-finance",
+  schema: "reporting_data",
+  name: "income_statement_with_current_forecast",
+  dependencies: "income_statement_all"
+}
+
+
+SELECT
+ * 
+FROM
+  `adswerve-finance.reporting_data.income_statement`
+WHERE
+scenario = 'Actual' 
+AND date <= (SELECT * FROM routines.reporting_rollover_date)
+OR (scenario_date = 
+  (
+    SELECT 
+      MAX(scenario_date)
+    FROM `adswerve-finance.reporting_data.income_statement`
+    WHERE EXTRACT(DAY FROM scenario_date) = 1)
+AND date > (SELECT * FROM routines.reporting_rollover_date))
