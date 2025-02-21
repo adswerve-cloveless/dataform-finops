@@ -1,6 +1,0 @@
-config {
-  type: "declaration",
-  database: "adswerve-finance",
-  schema: "google_sheets",
-  name: "expense_2023"
-}
