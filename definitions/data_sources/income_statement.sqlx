@@ -9,7 +9,7 @@ config {
 
 
 -- step 1 brings in the appropriate NetSuite project ID and NetSuite customer ID into the revenue data. This is needed as NetSuite by default commingles the two objects which creates multiple steps to follow each relationship individually.
-WITH step_1 AS (
+WITH act_step_1 AS (
 SELECT 
   d.* EXCEPT (internal_id, period),
   p.internal_id as project_id,
@@ -22,72 +22,117 @@ LEFT JOIN `adswerve-finance.Warehouse.Customer` c ON d.Internal_ID = c.internal_
 
 
 -- step 2 brings in the appropriate NetSuite parent customer ID. NetSuite has children customers used for billing that are irrelevant to the rest of the business so reporting should generally be handled at the parent. This step also include clean up of the account_category field.
-step_2 AS (
+act_step_2 AS (
 SELECT 
-  step_1.*,
+  act_step_1.*,
   c.parent_id,
   IF(c.account_category = 'Direct Marketer', 'Marketer', c.account_category) as account_category
-FROM step_1
+FROM act_step_1
 LEFT JOIN `adswerve-finance.Warehouse.Customer` c
-ON step_1.customer_id = c.internal_id
+ON act_step_1.customer_id = c.internal_id
 ),
 
 
 -- step 3 brings in the appropriate customer Salesforce_id for reporting. Salesforce and NetSuite have different customer architectures and the correct way to join the two is to role up NetSuite to the parent and join on the Salesforce Id that is logged in NetSuite.  
-step_3 AS (
+act_step_3 AS (
 SELECT
- step_2.*,
- c.salesforce_id as sfdc_customer_id
-FROM step_2
+ act_step_2.*,
+ c.salesforce_id as sfdc_customer_id,
+ a.acct_type as account_type,
+FROM act_step_2
 LEFT JOIN `adswerve-finance.Warehouse.Customer` c
-ON step_2.parent_id = c.internal_id
+ON act_step_2.parent_id = c.internal_id
+LEFT JOIN `adswerve-finance.Warehouse.Account` a
+ON act_step_2.account_number = a.number
 ),
 
+-----------------------------------------------------------------------------FCST---------------------------------------------------------------------
+--step 1 gathers all data and brings in the table suffix used for naming the forecast
+------------------------------------------------------------------------------------------------------------------------------------------------------
+fcst_step_1 AS (
+  SELECT
+    *,
+    routines.scenario(_TABLE_SUFFIX) as scenario
+  FROM
+    `adswerve-finance.Fin_Stage.BigQuery_BudgetTemplate*`
+    ),
+  
+-- step 2 unpivots the forecasted data reports
+fcst_step_2 AS (
+SELECT * FROM fcst_step_1
+UNPIVOT(Amount FOR Period IN (   
+     Jan
+    ,Feb
+    ,Mar
+    ,Apr 
+    ,May
+    ,Jun 
+    ,Jul 
+    ,Aug 
+    ,Sep 
+    ,Oct 
+    ,Nov 
+    ,Dec))
+  ),
+
+-- step 3 organizing, cleaning and stardardizing data. Forecast reporting is generated from a NetSuite financial report and Income Statement data is generated from a saved search. The below operations will algin the data to the Income Statement.
+fcst_step_3 AS (
+  SELECT
+    fcst_step_2.scenario,
+    a.display_name AS account,
+    IFNULL(cl.NAME, "- None -") AS class,
+    IFNULL(d.name, "- None -") AS department,
+    SAFE_CAST(REPLACE(fcst_step_2.Amount, '$', '') AS NUMERIC) as amount,
+    fcst_step_2.Account_Number AS account_number,
+    DATE(SAFE_CAST(LEFT(fcst_step_2.scenario, 4) AS INT), EXTRACT(MONTH FROM PARSE_DATE('%b', period)),1) as date,
+    CAST(NULL as STRING) as project_id,
+    CAST(NULL as STRING) as harvest_id,
+    CAST(NULL as STRING) as customer_id,
+    CAST(NULL as STRING) as parent_id,
+    fcst_step_2.Client_Type as account_category,
+    CAST(NULL as STRING) as sfdc_customer_id,
+    a.acct_type as account_type,
+  FROM fcst_step_2
+  LEFT JOIN `adswerve-finance.Warehouse.Class` cl
+  ON fcst_step_2.Class_Name = cl.NAME_FLAT
+  LEFT JOIN `adswerve-finance.Warehouse.Department` d
+  ON fcst_step_2.Department_Name = d.name_flat
+  LEFT JOIN `adswerve-finance.Warehouse.Account` a
+  ON fcst_step_2.Account_Number = a.number
+  WHERE Account_Number IS NOT NULL
+),
+
+------------------------------------------------------------------------------COMBINED----------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+step_4 AS (
+  SELECT 
+    "Actual" as scenario,
+    * 
+  FROM act_step_3
+  UNION ALL
+  SELECT
+    *
+  FROM
+    fcst_step_3
+),
 
 --step 4 brings in core reporting dimensions. Due to the GL structure and class there is a need to differentiate service categories with a case statement. Using class we can determine if a service should be grouped in Media, Analytics or Adobe.
-step_4 AS (
-SELECT 
-  step_3.*,
-  a.acct_type as account_type,
-  -- internal_income_statement is a summary view used in most financial statements. It categorizes gross billings and commingles passthru and reseller expense. Net Revenue by product cannot be produced by this column.
-  CASE
-    WHEN a.internal_income_statment = 'Services' AND step_3.class LIKE '%Media%' THEN 'Media Services'
-    WHEN a.internal_income_statment = 'Services' AND step_3.class LIKE '%Adobe%' THEN 'Adobe Services'
-    ELSE 'Analytics Services'
-  END AS internal_income_statement,
-  -- internal_net_revenue is a summary view used in most financial statements. It categorizes gross billings and reseller expense. This can be used to produce Net Revenue by product.
-  CASE
-    WHEN a.internal_net_revenue = 'Services' AND step_3.class LIKE '%Media%' THEN 'Media Services'
-    WHEN a.internal_net_revenue = 'Services' AND step_3.class LIKE '%Adobe%' THEN 'Adobe Services'
-    ELSE 'Analytics Services'
-  END AS internal_net_revenue,
-  -- internal_net_revenue_detail is a summary view used in most financial statements. It categorizes gross billings and reseller expense at a lower level of detail. This can be used to produce Net Revenue by product. This dimension also much be used to product Media vs. Analytics by product as it splits "Other Sales" into "Other Media Revenue" and "Other Analytics Revenue"
-  CASE
-    WHEN a.internal_net_revenue_detail = 'Services' AND step_3.class LIKE '%Media%' THEN 'Media Services'
-    WHEN a.internal_net_revenue_detail = 'Services' AND step_3.class LIKE '%Adobe%' THEN 'Adobe Services'
-    ELSE 'Analytics Services'
-  END AS internal_net_revenue_detail,
-  -- revenue_segment is the highest level of a rollup for Media vs. Analytics. This dimension should allow from a summary of Media vs. Analytics revenue.
-  CASE 
-    WHEN step_3.account_number = '41198' THEN "NA"
-    WHEN step_3.account_number = '51198' THEN "NA"
-    WHEN a.internal_net_revenue_detail = 'Services' AND class LIKE "%Media%" THEN "Media"
-    WHEN a.internal_net_revenue_detail = 'Services' AND class NOT LIKE "%Media%" THEN "Analytics"
-    ELSE a.revenue_segement
-  END revenue_segment
-FROM step_3
-LEFT JOIN `adswerve-finance.Warehouse.Account` a
-ON step_3.account_number = a.number
-),
-
---step 5 alters the amount field to match signs based on the account type. Income accounts should reflect postive values while expense accounts should reflect negative values. This simplifies aggregations for Net Revenue and calculations using Other Income.
 step_5 AS (
-  SELECT 
-    step_4.* EXCEPT (amount),
-    CASE WHEN step_4.account_type NOT LIKE "%Income%" AND step_4.account_type != "Statistical" THEN step_4.amount * -1
+SELECT 
+  step_4.* EXCEPT (amount),
+  a.acct_type as account_type, 
+  routines.service_cast(a.internal_income_statment, step_4.class) AS internal_income_statement, -- internal_income_statement is a summary view used in most financial statements. It categorizes gross billings and commingles passthru and reseller expense. Net Revenue by product cannot be produced by this column.
+  routines.service_cast(a.internal_net_revenue, step_4.class) AS internal_net_revenue,
+  routines.service_cast(a.internal_net_revenue_detail, step_4.class) AS internal_net_revenue_detail,
+  routines.segment_cast(a.internal_net_revenue_detail, step_4.class, step_4.account_number, a.revenue_segement) AS revenue_segement, -- revenue_segment is the highest level of a rollup for Media vs. Analytics. This dimension should allow from a summary of Media vs. Analytics revenue.
+  CASE 
+    WHEN a.acct_type NOT LIKE "%Income%" AND a.acct_type != "Statistical" THEN step_4.amount * -1
     ELSE step_4.amount
   END as amount
-  FROM step_4
+FROM step_4
+LEFT JOIN `adswerve-finance.Warehouse.Account` a
+ON step_4.account_number = a.number
 )
 
 SELECT * FROM step_5
