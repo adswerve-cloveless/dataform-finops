@@ -121,7 +121,6 @@ step_4 AS (
 step_5 AS (
 SELECT 
   step_4.* EXCEPT (amount),
-  a.acct_type as account_type, 
   routines.service_cast(a.internal_income_statment, step_4.class) AS internal_income_statement, -- internal_income_statement is a summary view used in most financial statements. It categorizes gross billings and commingles passthru and reseller expense. Net Revenue by product cannot be produced by this column.
   routines.service_cast(a.internal_net_revenue, step_4.class) AS internal_net_revenue,
   routines.service_cast(a.internal_net_revenue_detail, step_4.class) AS internal_net_revenue_detail,
