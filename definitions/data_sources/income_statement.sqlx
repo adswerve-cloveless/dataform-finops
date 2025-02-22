@@ -100,7 +100,7 @@ fcst_step_3 AS (
   LEFT JOIN `adswerve-finance.Warehouse.Class` cl
   ON fcst_step_2.Class_Name = cl.NAME_FLAT
   LEFT JOIN `adswerve-finance.Warehouse.Department` d
-  ON fcst_step_2.Department_Name = d.name_flat
+  ON REPLACE(fcst_step_2.Department_Name,":"," : ") = d.name
   LEFT JOIN `adswerve-finance.Warehouse.Account` a
   ON fcst_step_2.Account_Number = a.number
   WHERE Account_Number IS NOT NULL
