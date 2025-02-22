@@ -15,7 +15,7 @@ SELECT
   p.internal_id as project_id,
   p.harvest_id,
   IFNULL(c.internal_id, p.customer_internal_id) as customer_id
-FROM `adswerve-finance.raw_data.income_statement_all` d
+FROM ${ref("income_statement_all")} d
 LEFT JOIN `adswerve-finance.Warehouse.Project` p ON d.Internal_ID = p.internal_id
 LEFT JOIN `adswerve-finance.Warehouse.Customer` c ON d.Internal_ID = c.internal_id
 ),
@@ -84,14 +84,16 @@ fcst_step_3 AS (
     a.display_name AS account,
     IFNULL(cl.NAME, "- None -") AS class,
     IFNULL(d.name, "- None -") AS department,
-    CAST(REPLACE(REGEXP_EXTRACT(fcst_step_2.Amount, r'[\d,.]+'),',','') AS NUMERIC) AS amount,
+    IF(LEFT(fcst_step_2.Amount, 1) = "(",
+      CAST(REPLACE(REGEXP_EXTRACT(fcst_step_2.Amount, r'[\d,.]+'),',','') AS NUMERIC)*-1,
+      CAST(REPLACE(REGEXP_EXTRACT(fcst_step_2.Amount, r'[\d,.]+'),',','') AS NUMERIC)) AS amount,
     fcst_step_2.Account_Number AS account_number,
     DATE(SAFE_CAST(LEFT(fcst_step_2.scenario, 4) AS INT), EXTRACT(MONTH FROM PARSE_DATE('%b', period)),1) as date,
     CAST(NULL as STRING) as project_id,
     CAST(NULL as STRING) as harvest_id,
     CAST(NULL as STRING) as customer_id,
     CAST(NULL as STRING) as parent_id,
-    fcst_step_2.Client_Type as account_category,
+    IF(fcst_step_2.Client_Type = 'Direct Marketer', 'Marketer', fcst_step_2.Client_Type) as account_category,
     CAST(NULL as STRING) as sfdc_customer_id,
     a.acct_type as account_type,
   FROM fcst_step_2
