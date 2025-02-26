@@ -1,0 +1,7 @@
+config {
+  type: "table",
+  database: "adswerve-finance",
+  schema: "reporting_data",
+  name: "income_statement",
+  dependencies: "income_statement_all"
+}
