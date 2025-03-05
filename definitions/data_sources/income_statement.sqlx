@@ -26,7 +26,7 @@ act_step_2 AS (
 SELECT 
   act_step_1.*,
   c.parent_id,
-  IF(c.account_category = 'Direct Marketer', 'Marketer', c.account_category) as account_category
+  IF(c.account_category = 'Internal',NULL, IF(c.account_category = 'Direct Marketer', 'Marketer', c.account_category)) as account_category
 FROM act_step_1
 LEFT JOIN `adswerve-finance.Warehouse.Customer` c
 ON act_step_1.customer_id = c.internal_id
