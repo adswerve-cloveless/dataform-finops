@@ -5,6 +5,7 @@ config {
   schema: "raw_data",
   name: "income_statement_all",
   dependencies: [
+    "income_statement_2026", 
     "income_statement_2025", 
     "income_statement_2024", 
     "income_statement_2023", 
