@@ -76,7 +76,7 @@ UNPIVOT(Amount FOR Period IN (
     ,Dec))
   ),
 
--- step 3 organizing, cleaning and stardardizing data. Forecast reporting is generated from a NetSuite financial report and Income Statement data is generated from a saved search. The below operations will algin the data to the Income Statement.
+-- step 3 organizing, cleaning and stardardizing data. Forecast reporting is generated from a NetSuite financial report and Income Statement data is generated from a saved search. The below operations will align the data to the Income Statement.
 fcst_step_3 AS (
   SELECT
     fcst_step_2.scenario,
