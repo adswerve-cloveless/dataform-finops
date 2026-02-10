@@ -19,5 +19,5 @@ OR (scenario_date =
     SELECT 
       MAX(scenario_date)
     FROM ${ref("income_statement")}
-    WHERE EXTRACT(DAY FROM scenario_date) = 1)
+    WHERE EXTRACT(DAY FROM scenario_date) = 31) -- changed for budget was 1
 AND date > (SELECT * FROM ${ref("reporting_rollover_date")}))
