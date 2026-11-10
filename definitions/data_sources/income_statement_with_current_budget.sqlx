@@ -14,11 +14,11 @@ FROM
 WHERE
 scenario = 'Actual' 
 AND date <= (SELECT * FROM ${ref("reporting_rollover_date")})
-OR (scenario_date = 
-  (
-    SELECT 
-      MAX(scenario_date)
-    FROM ${ref("income_statement")}
-    WHERE EXTRACT(DAY FROM scenario_date) = 31)
-    AND EXTRACT(YEAR FROM scenario_date) != 2027
-AND date > (SELECT * FROM ${ref("reporting_rollover_date")}))
+OR (scenario_date = '2026-12-31')
+--   (
+--     SELECT 
+--       MAX(scenario_date)
+--     FROM ${ref("income_statement")}
+--     WHERE EXTRACT(DAY FROM scenario_date) = 31)
+--     AND EXTRACT(YEAR FROM scenario_date) != 2027
+-- AND date > (SELECT * FROM ${ref("reporting_rollover_date")}))
