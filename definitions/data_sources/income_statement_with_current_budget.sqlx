@@ -14,7 +14,8 @@ FROM
 WHERE
 scenario = 'Actual' 
 AND date <= (SELECT * FROM ${ref("reporting_rollover_date")})
-OR (scenario_date = '2026-12-31')
+OR ((scenario_date = '2026-12-31')
+AND date > (SELECT * FROM ${ref("reporting_rollover_date")}))
 --   (
 --     SELECT 
 --       MAX(scenario_date)
